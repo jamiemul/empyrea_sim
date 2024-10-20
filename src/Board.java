@@ -105,7 +105,7 @@ public class Board {
             System.out.print(" ".repeat((grid.size() - row.size()) * 2));
 
             for (Tile tile : row) {
-                System.out.print(tile.getState() + "  "); // Print tile state
+                System.out.print(tile.getState() + "  " + tile.getElements() + "  "); // Print tile state
             }
             System.out.println();
         }

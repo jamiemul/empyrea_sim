@@ -9,70 +9,62 @@ enum Element {
     FIRE, AIR, EARTH, WATER
 }
 
-enum Token {
-    DROUGHT,
-    STORM,
-    VOLCANO,
-    HARVEST
-}
-
 public class Tile {
-
     private TileState state;
     private List<Element> elements;
-    private List<Tile> neighbors;
-    private List<Unit> units;
+    private List<Unit> followers; // Add followers
+    private List<Unit> prophets; // Add prophets
     private List<Token> tokens;
+    private List<Tile> neighbors;
 
-    // Constructor for non-central tiles
-    public Tile(TileState state, List<Element> element) {
+    public Tile(TileState state, List<Element> elements) {
         this.state = state;
-        this.elements = element;  // Single element for regular tiles
-        this.neighbors = new ArrayList<>();
+        this.elements = elements;
+        this.followers = new ArrayList<>();
+        this.prophets = new ArrayList<>();
         this.tokens = new ArrayList<>();
-    }
-
-    // Add a neighboring tile to the set of neighbors
-    public void addNeighbor(Tile neighbor) {
-        neighbors.add(neighbor);
+        this.neighbors = new ArrayList<>();
     }
 
     public TileState getState() {
         return state;
     }
 
-    public List<Element> getElements() {
-        return elements;
+    public void setState(TileState state) {
+        this.state = state;
+    }
+
+    public List<Unit> getFollowers() {
+        return followers;
+    }
+
+    public void convertFollowers(Player player) {
+        for (Unit follower : followers) {
+            follower.setOwner(player);
+        }
+    }
+
+    public List<Unit> getProphets() {
+        return prophets;
+    }
+
+    public List<Token> getTokens() {
+        return tokens;
+    }
+
+    public void addToken(Token token) {
+        tokens.add(token);
+    }
+
+    public void addNeighbor(Tile neighbor) {
+        neighbors.add(neighbor);
     }
 
     public List<Tile> getNeighbors() {
         return neighbors;
     }
 
-    @Override
-    public String toString() {
-        return "[" + state + ", " + elements + "]";
-    }
-
-    public void addUnit(Unit unit) {
-        units.add(unit);
-    }
-
-    public List<Unit> getUnits() {
-        return units;
-    }
-
-    public List<Token> getTokens() {
-        return tokens; // Add this getter
-    }
-
-    public void addToken(Token token) {
-        tokens.add(token); // Method to add a token
-    }
-
-    public void printUnits() {
-        for (Unit unit : units) {
-            System.out.print(unit.getType() + "(" + unit.getOwner().getName() + ") ");
-        }
+    public List<Element> getElements() {
+        return elements;
     }
 }
