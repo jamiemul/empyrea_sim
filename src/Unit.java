@@ -1,15 +1,23 @@
+enum UnitType {
+    FOLLOWER, PROPHET
+}
+
 public class Unit {
 
-    private String type; // Either "Follower" or "Prophet"
+    private UnitType type; // Either "Follower" or "Prophet"
     private Player owner; // Reference to the player who owns the unit
 
-    public Unit(String type, Player owner) {
+    public Unit(UnitType type, Player owner) {
         this.type = type;
         this.owner = owner;
     }
 
-    public String getType() {
+    public UnitType getType() {
         return type;
+    }
+
+    public void setType(UnitType type) {
+        this.type = type;
     }
 
     public Player getOwner() {
@@ -19,4 +27,5 @@ public class Unit {
     public void setOwner(Player owner) {
         this.owner = owner;
     }
+
 }

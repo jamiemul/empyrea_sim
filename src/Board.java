@@ -94,7 +94,7 @@ public class Board {
                 }
             }
         }
-        return null; // Tile not found
+        return null;
     }
 
     public void printBoard() {

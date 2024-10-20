@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 enum TileState {
     OCEAN, GRASS, MOUNTAIN
@@ -10,7 +11,8 @@ enum Element {
 }
 
 public class Tile {
-    private TileState state;
+
+    private TileState tileState;
     private List<Element> elements;
     private List<Unit> followers; // Add followers
     private List<Unit> prophets; // Add prophets
@@ -18,7 +20,7 @@ public class Tile {
     private List<Tile> neighbors;
 
     public Tile(TileState state, List<Element> elements) {
-        this.state = state;
+        this.tileState = state;
         this.elements = elements;
         this.followers = new ArrayList<>();
         this.prophets = new ArrayList<>();
@@ -27,15 +29,59 @@ public class Tile {
     }
 
     public TileState getState() {
-        return state;
+        return tileState;
     }
 
     public void setState(TileState state) {
-        this.state = state;
+        this.tileState = state;
     }
 
     public List<Unit> getFollowers() {
         return followers;
+    }
+
+    public List<Unit> getFollowersNotOwned(Player player) {
+        List<Unit> followers =
+            getUnitsOfType("Follower").stream().filter(follower -> follower.getOwner() != player).collect(
+                Collectors.toList());
+
+        return followers;
+    }
+
+    public List<Unit> getFollowersOwned(Player player) {
+        List<Unit> followers = getUnitsOfType("Follower").stream().filter(follower -> follower.getOwner() == player)
+            .collect(
+                Collectors.toList());
+
+        return followers;
+    }
+
+    public List<Unit> getProphetsNotOwned(Player player) {
+        List<Unit> followers =
+            getUnitsOfType("Prophet").stream().filter(follower -> follower.getOwner() != player).collect(
+                Collectors.toList());
+
+        return followers;
+    }
+
+    public List<Unit> getProphetsOwned(Player player) {
+        List<Unit> followers = getUnitsOfType("Prophet").stream().filter(follower -> follower.getOwner() == player)
+            .collect(
+                Collectors.toList());
+
+        return followers;
+    }
+
+    public List<Unit> getUnitsOfType(String type) {
+        List<Unit> units = new ArrayList<>();
+
+        for (Unit unit : this.followers) {
+            if (unit.getType().equals(type)) {
+                units.add(unit);
+            }
+        }
+
+        return units;
     }
 
     public void convertFollowers(Player player) {
@@ -66,5 +112,13 @@ public class Tile {
 
     public List<Element> getElements() {
         return elements;
+    }
+
+    public void addFollower(Unit follower) {
+        followers.add(follower);
+    }
+
+    public void removeFollower(final Unit followerToKill) {
+        followers.remove(followerToKill);
     }
 }

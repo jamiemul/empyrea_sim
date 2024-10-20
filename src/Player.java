@@ -15,15 +15,4 @@ public class Player {
         return name;
     }
 
-    public List<Unit> getUnits() {
-        return units;
-    }
-
-    public void addUnit(Unit unit) {
-        units.add(unit);
-    }
-
-    public void removeUnit(Unit unit) {
-        units.remove(unit);
-    }
 }
