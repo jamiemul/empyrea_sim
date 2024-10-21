@@ -1,5 +1,8 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 enum TileState {
@@ -120,5 +123,27 @@ public class Tile {
 
     public void removeFollower(final Unit followerToKill) {
         followers.remove(followerToKill);
+    }
+
+    public Optional<Player> getPlayerWithMostUnits() {
+        Map<Player, Integer> playerUnitCount = new HashMap<>();
+
+        // Count followers
+        for (Unit follower : followers) {
+            Player owner = follower.getOwner();
+            playerUnitCount.put(owner, playerUnitCount.getOrDefault(owner, 0) + 1);
+        }
+
+        // Count prophets
+        for (Unit prophet : prophets) {
+            Player owner = prophet.getOwner();
+            playerUnitCount.put(owner, playerUnitCount.getOrDefault(owner, 0) + 1);
+        }
+
+        // Find the player with the most units
+        return playerUnitCount.entrySet()
+            .stream()
+            .max(Map.Entry.comparingByValue()) // Find the max value entry
+            .map(Map.Entry::getKey); // Return the player with the most units, if any
     }
 }
