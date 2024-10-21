@@ -13,6 +13,12 @@ public class Board {
         assignNeighbors();
     }
 
+    public void updateBoard(){
+        for(Tile tile : getAllTiles()){
+            tile.getMajorityOwner();
+        }
+    }
+
     private void initializeBoard() {
         // Predefined board layout
         TileState[][] layout = {
@@ -95,6 +101,14 @@ public class Board {
             }
         }
         return null;
+    }
+
+    public List<Tile> getAllTiles() {
+        List<Tile> allTiles = new ArrayList<>();
+        for (List<Tile> row : grid) {
+            allTiles.addAll(row);
+        }
+        return allTiles;
     }
 
     public void printBoard() {

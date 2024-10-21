@@ -21,6 +21,7 @@ public class Tile {
     private List<Unit> prophets; // Add prophets
     private List<Token> tokens;
     private List<Tile> neighbors;
+    private List<Player> majorityOwner;
 
     public Tile(TileState state, List<Element> elements) {
         this.tileState = state;
@@ -29,6 +30,10 @@ public class Tile {
         this.prophets = new ArrayList<>();
         this.tokens = new ArrayList<>();
         this.neighbors = new ArrayList<>();
+    }
+
+    public List<Player> getMajorityOwner() {
+        return getPlayerWithMostUnits();
     }
 
     public TileState getState() {
@@ -125,7 +130,7 @@ public class Tile {
         followers.remove(followerToKill);
     }
 
-    public Optional<Player> getPlayerWithMostUnits() {
+    public List<Player> getPlayerWithMostUnits() {
         Map<Player, Integer> playerUnitCount = new HashMap<>();
 
         // Count followers
@@ -140,10 +145,14 @@ public class Tile {
             playerUnitCount.put(owner, playerUnitCount.getOrDefault(owner, 0) + 1);
         }
 
-        // Find the player with the most units
+        // Find the maximum unit count
+        int maxCount = playerUnitCount.values().stream().max(Integer::compare).orElse(0);
+
+        // Collect players with the maximum unit count
         return playerUnitCount.entrySet()
             .stream()
-            .max(Map.Entry.comparingByValue()) // Find the max value entry
-            .map(Map.Entry::getKey); // Return the player with the most units, if any
+            .filter(entry -> entry.getValue() == maxCount)
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
     }
 }
