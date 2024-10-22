@@ -9,6 +9,8 @@ public class EmpyreaSim {
                                        new Player("Player 2", Element.WATER, board),
                                        new Player("Player 3", Element.EARTH, board),
                                        new Player("Player 4", Element.AIR, board));
+
+        System.out.print("Worship weight: " + players.get(0).calculateWorshipWeight());
         int EPOCH_MANA = 16;
     }
 }

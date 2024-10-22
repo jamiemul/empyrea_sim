@@ -21,6 +21,7 @@ public class Player {
     private Board board;
     private Action lastAction;
     private List<Card> cards;
+    private int VP = 0;
 
     public Player(String name, Element innatePower, Board board) {
         this.elements = Map.of(Element.FIRE, 0, Element.AIR, 0, Element.EARTH, 0, Element.WATER, 0);
@@ -32,11 +33,76 @@ public class Player {
     }
 
     public void takeTurn() {
-        // Play card or gain advancement
-        // Choose main action
+        // Play card or take advancement
+
+        EnumSet availableActions = getAvailableActions();
+        getActionWeighting(availableActions);
     }
 
-    
+    public void getActionWeighting(EnumSet<Action> availableActions) {
+        float worshipWeight = availableActions.contains(Action.WORSHIP) ? calculateWorshipWeight() : 0.0f;
+        float migrateWeight = availableActions.contains(Action.MIGRATE) ? calculateMigrateWeight() : 0.0f;
+        float populateWeight = availableActions.contains(Action.POPULATE) ? calculatePopulateWeight() : 0.0f;
+
+        List<Map.Entry<Float, Runnable>> actions = List.of(
+            Map.entry(worshipWeight, this::worship),
+            Map.entry(migrateWeight, this::migrate),
+            Map.entry(populateWeight, this::populate)
+        );
+
+        actions.stream()
+            .max(Map.Entry.comparingByKey())
+            .ifPresent(entry -> entry.getValue().run());
+    }
+
+    public float calculateWorshipWeight() {
+        int majorityTiles = getMajorityTiles();
+        int totalElements = getTotalElements();
+
+        // Normalize totalElements (0 elements -> 1, 8 elements -> 0)
+        float normalizedTotalElements = 1.0f - (totalElements / 8.0f);
+
+        // Normalize majorityTiles (0 tiles -> 0, 3 tiles -> 1)
+        float normalizedMajorityTiles = Math.min(majorityTiles / 2.0f, 1.0f);
+        float weightedMajorityTiles = (float) Math.pow(normalizedMajorityTiles, 2);
+
+        return (normalizedTotalElements * 0.6f) + (weightedMajorityTiles * 0.4f);
+    }
+
+    public int getMajorityTiles() {
+        int majorityTiles = 0;
+        for (Tile tile : board.getAllTiles()) {
+            if (tile.getMajorityOwner().contains(this) && tile.getMajorityOwner().size() > 1) {
+                majorityTiles += 1;
+            }
+        }
+
+        return majorityTiles;
+    }
+
+    public int getTotalElements() {
+        return elements.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
+    public float calculateMigrateWeight() {
+        return 0.0f;
+    }
+
+    public float calculatePopulateWeight() {
+        return 0.0f;
+    }
+
+    public EnumSet getAvailableActions() {
+        if (lastAction == Action.NONE) {
+            return EnumSet.of(Action.MIGRATE, Action.POPULATE, Action.WORSHIP);
+        } else if (lastAction == Action.MIGRATE) {
+            return EnumSet.of(Action.POPULATE, Action.WORSHIP);
+        } else if (lastAction == Action.POPULATE) {
+            return EnumSet.of(Action.MIGRATE, Action.WORSHIP);
+        } else {
+            return EnumSet.of(Action.MIGRATE, Action.POPULATE);
+        }
+    }
 
     public String getName() {
         return name;
@@ -52,7 +118,7 @@ public class Player {
         return advancements.contains(advancement);
     }
 
-    public void migrate(Player player) {
+    public void migrate() {
         int moves = 3;
         findMajorityMove(moves);
         if (moves > 0) {
@@ -125,7 +191,7 @@ public class Player {
         tile.addFollower(unitToMove);
     }
 
-    public void populate(Player player) {
+    public void populate() {
         populateTiles();
         // Add units to each tile with units
         if (hasAdvancement(Advancement.RITUALS)) {
@@ -149,7 +215,6 @@ public class Player {
     }
 
     public void worship() {
-        // Gain innate power
         if (hasAdvancement(Advancement.ASCENSION)) {
             ascension();
         }
@@ -160,6 +225,7 @@ public class Player {
             conversion();
         }
 
+        // Gain innate power
         this.elements.put(innatePower, Math.min(this.elements.get(innatePower) + 1, 2));
 
         List<Tile> tiles = board.getAllTiles();
@@ -230,5 +296,13 @@ public class Player {
 
     public void pilgrims() {
         System.out.println(name + " used PILGRIMS advancement");
+    }
+
+    public int getVP() {
+        return VP;
+    }
+
+    public void increaseVP(int vp) {
+        VP += vp;
     }
 }
