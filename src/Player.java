@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,25 +7,36 @@ enum Advancement {
     LANDSCAPE, ODYSSEY, RITUALS, SETTLERS, ASCENSION, ALCHEMY, ORACLE, PILGRIMS, CONVERSION
 }
 
+enum Action {
+    NONE, MIGRATE, POPULATE, WORSHIP
+}
+
 public class Player {
 
     private String name;
     private List<Unit> units;
     private EnumSet<Advancement> advancements;  // EnumSet for advancements
-    private byte fire = 0;
-    private byte water = 0;
-    private byte earth = 0;
-    private byte air = 0;
+    private Map<Element, Integer> elements;
     private Element innatePower;  // Innate power reference
     private Board board;
+    private Action lastAction;
+    private List<Card> cards;
 
     public Player(String name, Element innatePower, Board board) {
+        this.elements = Map.of(Element.FIRE, 0, Element.AIR, 0, Element.EARTH, 0, Element.WATER, 0);
         this.name = name;
         this.units = new ArrayList<>();
         this.advancements = EnumSet.noneOf(Advancement.class); // No advancements at start
         this.innatePower = innatePower;
         this.board = board;
     }
+
+    public void takeTurn() {
+        // Play card or gain advancement
+        // Choose main action
+    }
+
+    
 
     public String getName() {
         return name;
@@ -69,10 +79,12 @@ public class Player {
                     List<Unit> followers = adjacentTile.getFollowersOwned(this);
                     List<Unit> prophets = adjacentTile.getProphetsOwned(this);
                     if (followers.size() + prophets.size() >= 2) {
-                        Unit moveFollower = followers.get(0);
-                        adjacentTile.removeFollower(moveFollower);
-                        tile.addFollower(moveFollower);
-                        movesLeft--;    
+                        if (prophets.size() > 1) {
+                            moveUnit(tile, prophets, adjacentTile);
+                        } else {
+                            moveUnit(tile, followers, adjacentTile);
+                        }
+                        movesLeft--;
                     }
                     if (movesLeft == 0) {
                         break;
@@ -80,7 +92,6 @@ public class Player {
                 }
             }
         }
-
     }
 
     public void findSpreadMove(int moves) {
@@ -91,12 +102,13 @@ public class Player {
             List<Unit> prophets = tile.getProphetsOwned(this);
             if (followers.size() + prophets.size() >= 2) {
                 for (Tile adjacentTile : tile.getNeighbors()) {
-
                     if (adjacentTile.getFollowersOwned(this).size() == 0
                         && adjacentTile.getProphetsOwned(this).size() == 0) {
-                        Unit moveFollower = followers.get(0);
-                        adjacentTile.removeFollower(moveFollower);
-                        tile.addFollower(moveFollower);
+                        if (prophets.size() > 1) {
+                            moveUnit(tile, prophets, adjacentTile);
+                        } else {
+                            moveUnit(tile, followers, adjacentTile);
+                        }
                         movesLeft--;
                     }
                     if (movesLeft == 0) {
@@ -105,6 +117,12 @@ public class Player {
                 }
             }
         }
+    }
+
+    private void moveUnit(final Tile tile, final List<Unit> unit, final Tile adjacentTile) {
+        Unit unitToMove = unit.get(0);
+        adjacentTile.removeFollower(unitToMove);
+        tile.addFollower(unitToMove);
     }
 
     public void populate(Player player) {
@@ -121,8 +139,17 @@ public class Player {
         }
     }
 
-    public void worship(Player player) {
-        // Gain innate power and elements where you have majority
+    public void populateTiles() {
+        List<Tile> tiles = board.getAllTiles();
+        for (Tile tile : tiles) {
+            if (tile.getFollowersOwned(this).size() > 0) {
+                tile.addFollower(new Unit(UnitType.FOLLOWER, this));
+            }
+        }
+    }
+
+    public void worship() {
+        // Gain innate power
         if (hasAdvancement(Advancement.ASCENSION)) {
             ascension();
         }
@@ -132,15 +159,40 @@ public class Player {
         if (hasAdvancement(Advancement.CONVERSION)) {
             conversion();
         }
-    }
 
-    public void populateTiles() {
+        this.elements.put(innatePower, Math.min(this.elements.get(innatePower) + 1, 2));
+
         List<Tile> tiles = board.getAllTiles();
         for (Tile tile : tiles) {
-            if (tile.getFollowersOwned(this).size() > 0) {
-                tile.addFollower(new Unit(UnitType.FOLLOWER, this));
+            if (tile.getState() != TileState.OCEAN
+                && tile.getMajorityOwner().contains(this)
+                && tile.getMajorityOwner().size() == 1) {
+                List<Element> tileElements = tile.getElements();
+
+                if (tileElements.size() == 1) {
+                    this.elements.put(tileElements.get(0), Math.min(this.elements.get(tileElements.get(0)) + 1, 2));
+                } else {
+                    gainMostNeededElement();
+                }
+
             }
         }
+    }
+
+    public void gainMostNeededElement() {
+        if (!getElementOfValue(0)) {
+            getElementOfValue(1);
+        }
+    }
+
+    public boolean getElementOfValue(int value) {
+        for (Map.Entry<Element, Integer> entry : elements.entrySet()) {
+            if (entry.getValue() == value && entry.getKey() != innatePower) {
+                elements.put(entry.getKey(), 1);
+                return true;
+            }
+        }
+        return false;
     }
 
     // Sample advancement functions
