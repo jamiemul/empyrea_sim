@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 enum TileState {
@@ -20,7 +21,7 @@ public class Tile {
     private List<Unit> prophets; // Add prophets
     private List<Token> tokens;
     private List<Tile> neighbors;
-    private List<Player> majorityOwner;
+    private Optional<Player> majorityOwner;
 
     public Tile(TileState state, List<Element> elements) {
         this.tileState = state;
@@ -31,8 +32,8 @@ public class Tile {
         this.neighbors = new ArrayList<>();
     }
 
-    public List<Player> getMajorityOwner() {
-        return getPlayerWithMostUnits();
+    public Optional<Player> getMajorityOwner() {
+        return updateMajorityOwner();
     }
 
     public TileState getState() {
@@ -129,19 +130,32 @@ public class Tile {
         followers.remove(followerToKill);
     }
 
+    public Optional<Player> updateMajorityOwner() {
+        List<Player> majority = getPlayerWithMostUnits();
+        if (majority.size() == 1) {
+            majorityOwner = Optional.ofNullable(majority.get(0));
+            return majorityOwner;
+        }
+        return Optional.empty();
+    }
+
     public List<Player> getPlayerWithMostUnits() {
         Map<Player, Integer> playerUnitCount = new HashMap<>();
 
-        // Count followers
-        for (Unit follower : followers) {
-            Player owner = follower.getOwner();
+        // Combine followers and prophets into a single loop
+        List<Unit> allUnits = new ArrayList<>();
+        allUnits.addAll(followers);
+        allUnits.addAll(prophets);
+
+        // Count units for each player
+        for (Unit unit : allUnits) {
+            Player owner = unit.getOwner();
             playerUnitCount.put(owner, playerUnitCount.getOrDefault(owner, 0) + 1);
         }
 
-        // Count prophets
-        for (Unit prophet : prophets) {
-            Player owner = prophet.getOwner();
-            playerUnitCount.put(owner, playerUnitCount.getOrDefault(owner, 0) + 1);
+        // Early return if no units
+        if (playerUnitCount.isEmpty()) {
+            return new ArrayList<>(); // No players found
         }
 
         // Find the maximum unit count
