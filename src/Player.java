@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 enum Advancement {
     LANDSCAPE, ODYSSEY, RITUALS, SETTLERS, ASCENSION, ALCHEMY, ORACLE, PILGRIMS, CONVERSION
@@ -72,7 +73,7 @@ public class Player {
     public int getMajorityTiles() {
         int majorityTiles = 0;
         for (Tile tile : board.getAllTiles()) {
-            if (tile.getMajorityOwner().contains(this) && tile.getMajorityOwner().size() > 1) {
+            if (!tile.getMajorityOwner().isEmpty() && tile.getMajorityOwner().get() == this) {
                 majorityTiles += 1;
             }
         }
@@ -140,7 +141,7 @@ public class Player {
     public void findMajorityMove(int moves) {
         int movesLeft = moves;
         for (Tile tile : board.getAllTiles()) {
-            if (tile.getMajorityOwner().contains(this) && tile.getMajorityOwner().size() > 1) {
+            if (!tile.getMajorityOwner().isEmpty() && tile.getMajorityOwner().get() == this) {
                 for (Tile adjacentTile : tile.getNeighbors()) {
                     List<Unit> followers = adjacentTile.getFollowersOwned(this);
                     List<Unit> prophets = adjacentTile.getProphetsOwned(this);
@@ -231,8 +232,7 @@ public class Player {
         List<Tile> tiles = board.getAllTiles();
         for (Tile tile : tiles) {
             if (tile.getState() != TileState.OCEAN
-                && tile.getMajorityOwner().contains(this)
-                && tile.getMajorityOwner().size() == 1) {
+                && !tile.getMajorityOwner().isEmpty() && tile.getMajorityOwner().get() == this) {
                 List<Element> tileElements = tile.getElements();
 
                 if (tileElements.size() == 1) {
